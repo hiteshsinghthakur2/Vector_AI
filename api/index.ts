@@ -90,7 +90,34 @@ app.post('/api/generate', async (req, res) => {
     res.json({ svgContent: svgContent.trim() });
   } catch (error: any) {
     console.error("Error generating SVG:", error);
-    res.status(500).json({ error: error.message || "Failed to generate SVG" });
+    
+    let errorMessage = error.message || "Failed to generate SVG";
+    
+    // Try to parse JSON error message from GoogleGenAI
+    try {
+      if (errorMessage.startsWith('{') && errorMessage.endsWith('}')) {
+        const parsedError = JSON.parse(errorMessage);
+        if (parsedError.error && parsedError.error.message) {
+          errorMessage = parsedError.error.message;
+        }
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+
+    const isCustomKey = !!req.headers['x-gemini-api-key'];
+
+    if (errorMessage.includes('429') || errorMessage.toLowerCase().includes('quota')) {
+      if (isCustomKey) {
+        errorMessage = "Your Gemini API Key has exceeded its quota. Please check your Google Cloud billing details.";
+      } else {
+        errorMessage = "The default API key has exceeded its quota. Please provide your own Gemini API Key in the settings (⚙️).";
+      }
+    } else if (errorMessage.toLowerCase().includes('api key not valid') || errorMessage.includes('API_KEY_INVALID')) {
+      errorMessage = "The provided Gemini API Key is invalid. Please check your settings (⚙️).";
+    }
+
+    res.status(500).json({ error: errorMessage });
   }
 });
 

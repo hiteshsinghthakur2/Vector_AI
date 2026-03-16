@@ -44,8 +44,11 @@ export default function App() {
           setSvgContent(svg);
         } catch (err: any) {
           console.error("Error generating SVG:", err);
-          setError(err.message || "Failed to process the design. Please try again.");
-          if (err.message && err.message.toLowerCase().includes('api key')) {
+          const errorMsg = err.message || "Failed to process the design. Please try again.";
+          setError(errorMsg);
+          
+          const lowerErrorMsg = errorMsg.toLowerCase();
+          if (lowerErrorMsg.includes('api key') || lowerErrorMsg.includes('quota') || lowerErrorMsg.includes('429') || lowerErrorMsg.includes('settings')) {
             setIsSettingsOpen(true);
           }
         } finally {
