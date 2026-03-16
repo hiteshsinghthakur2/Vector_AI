@@ -12,7 +12,13 @@ app.post('/api/generate', async (req, res) => {
       return res.status(400).json({ error: 'Missing image data or mime type' });
     }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const apiKey = req.headers['x-gemini-api-key'] || process.env.GEMINI_API_KEY;
+    
+    if (!apiKey) {
+      return res.status(401).json({ error: 'Gemini API key is required. Please provide it in the settings.' });
+    }
+
+    const ai = new GoogleGenAI({ apiKey: apiKey as string });
 
     const prompt = `Analyze this design/image. Recreate it as a clean, professional, scalable vector graphic (SVG) that is compatible with vector editing software like CorelDraw and ready for high-quality print.
   
