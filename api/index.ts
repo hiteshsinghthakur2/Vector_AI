@@ -12,13 +12,7 @@ app.post('/api/generate', async (req, res) => {
       return res.status(400).json({ error: 'Missing image data or mime type' });
     }
 
-    const apiKey = req.headers['x-gemini-api-key'] || process.env.GEMINI_API_KEY;
-    
-    if (!apiKey) {
-      return res.status(401).json({ error: 'Gemini API key is required. Please provide it in the settings.' });
-    }
-
-    const ai = new GoogleGenAI({ apiKey: apiKey as string });
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const prompt = `Analyze this design/image. Recreate it as a clean, professional, scalable vector graphic (SVG) that is compatible with vector editing software like CorelDraw and ready for high-quality print.
   
@@ -90,34 +84,7 @@ app.post('/api/generate', async (req, res) => {
     res.json({ svgContent: svgContent.trim() });
   } catch (error: any) {
     console.error("Error generating SVG:", error);
-    
-    let errorMessage = error.message || "Failed to generate SVG";
-    
-    // Try to parse JSON error message from GoogleGenAI
-    try {
-      if (errorMessage.startsWith('{') && errorMessage.endsWith('}')) {
-        const parsedError = JSON.parse(errorMessage);
-        if (parsedError.error && parsedError.error.message) {
-          errorMessage = parsedError.error.message;
-        }
-      }
-    } catch (e) {
-      // Ignore parse errors
-    }
-
-    const isCustomKey = !!req.headers['x-gemini-api-key'];
-
-    if (errorMessage.includes('429') || errorMessage.toLowerCase().includes('quota')) {
-      if (isCustomKey) {
-        errorMessage = "Your Gemini API Key has exceeded its quota. Please check your Google Cloud billing details.";
-      } else {
-        errorMessage = "The default API key has exceeded its quota. Please provide your own Gemini API Key in the settings (⚙️).";
-      }
-    } else if (errorMessage.toLowerCase().includes('api key not valid') || errorMessage.includes('API_KEY_INVALID')) {
-      errorMessage = "The provided Gemini API Key is invalid. Please check your settings (⚙️).";
-    }
-
-    res.status(500).json({ error: errorMessage });
+    res.status(500).json({ error: error.message || "Failed to generate SVG" });
   }
 });
 

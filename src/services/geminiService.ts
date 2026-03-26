@@ -1,15 +1,9 @@
-export async function generateSvgFromImage(base64Image: string, mimeType: string, apiKey?: string): Promise<string> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  
-  if (apiKey) {
-    headers['x-gemini-api-key'] = apiKey;
-  }
-
+export async function generateSvgFromImage(base64Image: string, mimeType: string): Promise<string> {
   const response = await fetch('/api/generate', {
     method: 'POST',
-    headers,
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({ base64Image, mimeType }),
   });
 
