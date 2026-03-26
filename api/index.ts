@@ -102,7 +102,7 @@ app.post('/api/generate', async (req, res) => {
     }
 
     if (errorMessage.includes("API key not valid")) {
-      errorMessage = "Invalid Gemini API Key. Please check your GEMINI_API_KEY environment variable in your deployment settings (e.g., Vercel Dashboard) and ensure it is correct.";
+      errorMessage = "Invalid Gemini API Key. If you are in AI Studio, check the Secrets panel (Settings -> Secrets). If you are on Vercel, check your Environment Variables.";
     }
 
     res.status(500).json({ error: errorMessage });
