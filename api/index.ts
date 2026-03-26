@@ -53,7 +53,7 @@ app.post('/api/generate', async (req, res) => {
 
     const response = await Promise.race([
       ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
+        model: "gemini-3-flash-preview",
         contents: {
           parts: [
             {
