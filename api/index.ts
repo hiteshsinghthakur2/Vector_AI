@@ -12,6 +12,10 @@ app.post('/api/generate', async (req, res) => {
       return res.status(400).json({ error: 'Missing image data or mime type' });
     }
 
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'GEMINI_API_KEY environment variable is missing. Please configure it in your deployment settings.' });
+    }
+
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const prompt = `Analyze this design/image. Recreate it as a clean, professional, scalable vector graphic (SVG) that is compatible with vector editing software like CorelDraw and ready for high-quality print.
@@ -84,7 +88,24 @@ app.post('/api/generate', async (req, res) => {
     res.json({ svgContent: svgContent.trim() });
   } catch (error: any) {
     console.error("Error generating SVG:", error);
-    res.status(500).json({ error: error.message || "Failed to generate SVG" });
+    
+    let errorMessage = error.message || "Failed to generate SVG";
+    
+    try {
+      // The Gemini API sometimes returns errors as a JSON string
+      const parsedError = JSON.parse(errorMessage);
+      if (parsedError.error && parsedError.error.message) {
+        errorMessage = parsedError.error.message;
+      }
+    } catch (e) {
+      // Ignore parse errors, keep original message
+    }
+
+    if (errorMessage.includes("API key not valid")) {
+      errorMessage = "Invalid Gemini API Key. Please check your GEMINI_API_KEY environment variable in your deployment settings (e.g., Vercel Dashboard) and ensure it is correct.";
+    }
+
+    res.status(500).json({ error: errorMessage });
   }
 });
 
